@@ -1,5 +1,5 @@
 import heroImage from "../assets/images/hero.svg";
-
+import { Link } from "react-router-dom";
 function Hero() {
   return (
     <section className="flex min-h-screen items-center bg-slate-900 px-8 pt-24 text-white">
@@ -22,9 +22,13 @@ function Hero() {
           </p>
 
           <div className="mt-8 flex gap-4">
-            <button className="rounded-xl bg-blue-600 px-6 py-3 font-semibold transition duration-300 hover:scale-105 hover:bg-blue-700">
-              Upload Resume
-            </button>
+           <Link
+  to="/upload"
+  className="rounded-xl bg-blue-600 px-6 py-3 font-semibold transition duration-300 hover:scale-105 hover:bg-blue-700"
+>
+  Upload Resume
+</Link>
+            
 
             <button className="rounded-xl border border-white px-6 py-3 transition duration-300 hover:scale-105 hover:bg-white hover:text-slate-900">
               Learn More
