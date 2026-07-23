@@ -31,7 +31,7 @@ console.log("Job Description:", jobDescription);
 formData.append("jobDescription", jobDescription);
 
     try {
-      const response = await fetch("http://localhost:5000/upload", {
+      const response = await fetch("https://resume-ai-backend-vtbx.onrender.com/upload", {
         method: "POST",
         body: formData,
       });
@@ -61,7 +61,7 @@ toast.error("Something went wrong!");
   }
 
   try {
-    const response = await fetch("http://localhost:5000/rewrite", {
+    const response = await fetch("https://resume-ai-backend-vtbx.onrender.com/rewrite", {
       method: "POST",
       body: formData,
     });
