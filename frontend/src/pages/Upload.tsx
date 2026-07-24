@@ -51,6 +51,7 @@ toast.error("Something went wrong!");
   };
 
   const rewriteResume = async () => {
+    console.log("Rewrite button clicked");
   if (!selectedFile) return;
 
   const formData = new FormData();
@@ -319,7 +320,7 @@ className="rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 fon
   onClick={rewriteResume}
   className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-purple-500/30"
 >
-  ✨ Rewrite Resume
+TEST BUTTON
 </button>
 
     <button
