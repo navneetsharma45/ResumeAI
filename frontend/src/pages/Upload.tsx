@@ -20,6 +20,8 @@ function Upload() {
   const [jobDescription, setJobDescription] = useState("");
   const reportRef = useRef<HTMLDivElement>(null);
   const [rewrittenResume, setRewrittenResume] = useState("");
+  const [rewriting, setRewriting] = useState(false);
+
 
   const uploadResume = async () => {
     if (!selectedFile) return;
@@ -62,6 +64,7 @@ toast.error("Something went wrong!");
   }
 
   try {
+    setRewriting(true);
     const response = await fetch("https://resume-ai-backend-vtbx.onrender.com/rewrite", {
       method: "POST",
       body: formData,
@@ -76,7 +79,9 @@ setRewrittenResume(data.rewrittenResume);} else {
   } catch (error) {
     console.error(error);
     toast.error("Something went wrong.");
-  }
+  } finally {
+  setRewriting(false);
+}
 };
 
 const downloadRewrittenResume = () => {
@@ -318,9 +323,10 @@ className="rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 fon
 
 <button
   onClick={rewriteResume}
-  className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-purple-500/30"
+  disabled={rewriting}
+  className="rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-60"
 >
-TEST BUTTON
+  {rewriting ? "✨ Rewriting..." : "✨ Rewrite Resume"}
 </button>
 
     <button
