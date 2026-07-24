@@ -1,10 +1,10 @@
-import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 export async function analyzeResume(resumeText, jobDescription) {
@@ -33,12 +33,18 @@ Job Description:
 ${jobDescription}
 `;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: prompt,
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    temperature: 0.2,
   });
 
-  return response.text;
+  return response.choices[0].message.content;
 }
 
 export async function rewriteResume(resumeText, jobDescription) {
@@ -51,7 +57,7 @@ Rewrite the following resume to be:
 - Clear
 - Keyword optimized
 - Keep all facts truthful.
-- If a job description is provided, tailor the resume toward that role.
+- Tailor it to the job description if provided.
 
 Resume:
 ${resumeText}
@@ -59,13 +65,19 @@ ${resumeText}
 Job Description:
 ${jobDescription || "Not provided"}
 
-Return ONLY the rewritten resume in clean Markdown.
+Return ONLY the rewritten resume in Markdown.
 `;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
-    contents: prompt,
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    temperature: 0.2,
   });
 
-  return response.text;
+  return response.choices[0].message.content;
 }
