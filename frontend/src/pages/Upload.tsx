@@ -73,7 +73,12 @@ toast.error("Something went wrong!");
     const data = await response.json();
 
     if (data.success) {
-setRewrittenResume(data.rewrittenResume);} else {
+setRewrittenResume(data.rewrittenResume);
+console.log(data.rewrittenResume);
+
+} 
+
+else {
   toast.error(data.message || "Failed to rewrite resume.");
 }
   } catch (error) {
@@ -87,29 +92,259 @@ setRewrittenResume(data.rewrittenResume);} else {
 const downloadRewrittenResume = () => {
   if (!rewrittenResume) return;
 
-  const blob = new Blob([rewrittenResume], {
-    type: "text/plain;charset=utf-8",
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
   });
 
-  const url = URL.createObjectURL(blob);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
 
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "AI_Rewritten_Resume.txt";
+  let y = 20;
 
-  document.body.appendChild(link);
-  link.click();
+  const checkPage = (neededHeight = 10) => {
+    if (y + neededHeight > pageHeight - 15) {
+      doc.addPage();
+      y = 20;
+    }
+  };
 
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  const lines = rewrittenResume.split("\n");
+
+  let email = "";
+  let phone = "";
+  let linkedin = "";
+  let github = "";
+
+  lines.forEach((line) => {
+    let cleanLine = line.trim();
+
+    // Ignore empty lines
+    if (!cleanLine) {
+      y += 4;
+      return;
+    }
+
+    // Ignore Markdown separators
+    if (/^[-*_]{3,}$/.test(cleanLine)) {
+      return;
+    }
+
+    // Remove Markdown formatting
+    cleanLine = cleanLine
+      .replace(/^###\s*/, "")
+      .replace(/^##\s*/, "")
+      .replace(/^#\s*/, "")
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/^\*\s*/, "")
+      .replace(/^- /, "")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+
+    // Convert Markdown table rows into readable text
+    if (cleanLine.startsWith("|")) {
+      if (
+        cleanLine
+          .replace(/[|\-\s:]/g, "")
+          .length === 0
+      ) {
+        return;
+      }
+
+      const cells = cleanLine
+        .split("|")
+        .map((cell) => cell.trim())
+        .filter(Boolean);
+
+      cleanLine = cells.join("   |   ");
+    }
+
+    // Contact information
+    if (cleanLine.startsWith("Email:")) {
+      email = cleanLine.replace("Email:", "").trim();
+      return;
+    }
+
+    if (cleanLine.startsWith("Phone:")) {
+      phone = cleanLine.replace("Phone:", "").trim();
+      return;
+    }
+
+    if (cleanLine.startsWith("LinkedIn:")) {
+      linkedin = cleanLine.replace("LinkedIn:", "").trim();
+      return;
+    }
+
+    if (cleanLine.startsWith("GitHub:")) {
+      github = cleanLine.replace("GitHub:", "").trim();
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(40, 40, 40);
+
+      const contactLine1 = `Email: ${email}  |  Phone: ${phone}`;
+
+      doc.text(
+        contactLine1,
+        pageWidth / 2,
+        y,
+        { align: "center" }
+      );
+
+      const contactWidth = doc.getTextWidth(contactLine1);
+
+      if (email) {
+        doc.link(
+          pageWidth / 2 - contactWidth / 2,
+          y - 4,
+          doc.getTextWidth(`Email: ${email}`),
+          5,
+          { url: `mailto:${email}` }
+        );
+      }
+
+      y += 5;
+
+      const linkedinText = `LinkedIn: ${linkedin}`;
+      const separatorText = "  |  ";
+      const githubText = `GitHub: ${github}`;
+
+      const linkedinWidth = doc.getTextWidth(linkedinText);
+      const separatorWidth = doc.getTextWidth(separatorText);
+      const githubWidth = doc.getTextWidth(githubText);
+
+      const totalWidth =
+        linkedinWidth +
+        separatorWidth +
+        githubWidth;
+
+      const startX =
+        pageWidth / 2 - totalWidth / 2;
+
+      doc.text(
+        linkedinText,
+        startX,
+        y
+      );
+
+      doc.text(
+        separatorText,
+        startX + linkedinWidth,
+        y
+      );
+
+      doc.text(
+        githubText,
+        startX + linkedinWidth + separatorWidth,
+        y
+      );
+
+      if (linkedin) {
+        doc.link(
+          startX,
+          y - 4,
+          linkedinWidth,
+          5,
+          { url: `https://${linkedin}` }
+        );
+      }
+
+      if (github) {
+        doc.link(
+          startX + linkedinWidth + separatorWidth,
+          y - 4,
+          githubWidth,
+          5,
+          { url: `https://${github}` }
+        );
+      }
+
+      doc.setTextColor(0, 0, 0);
+
+      y += 10;
+      return;
+    }
+
+    // Detect headings
+    const isMainHeading = line.trim().startsWith("# ");
+    const isSectionHeading = line.trim().startsWith("## ");
+    const isSubHeading = line.trim().startsWith("### ");
+
+    checkPage(15);
+
+    if (isMainHeading) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(25, 55, 109);
+
+      doc.text(
+        cleanLine,
+        pageWidth / 2,
+        y,
+        { align: "center" }
+      );
+
+      doc.setTextColor(0, 0, 0);
+
+      y += 12;
+      return;
+    }
+
+    if (isSectionHeading) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(15);
+      doc.setTextColor(41, 98, 255);
+
+      doc.text(cleanLine, 20, y);
+
+      doc.setDrawColor(41, 98, 255);
+      doc.setLineWidth(0.4);
+      doc.line(20, y + 2, 190, y + 2);
+
+      doc.setTextColor(0, 0, 0);
+
+      y += 9;
+      return;
+    }
+
+    if (isSubHeading) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+
+      doc.text(cleanLine, 20, y);
+
+      y += 7;
+      return;
+    }
+
+    // Normal text
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10.5);
+
+    const x = cleanLine.startsWith("•") ? 25 : 20;
+
+    const wrappedText = doc.splitTextToSize(
+      cleanLine,
+      165
+    );
+
+    checkPage(wrappedText.length * 5 + 5);
+
+    doc.text(wrappedText, x, y);
+
+    y += wrappedText.length * 5 + 3;
+  });
+
+  doc.save("AI_Rewritten_Resume.pdf");
 };
-
 <button
   onClick={downloadRewrittenResume}
   className="mb-4 ml-3 rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
 >
   📥 Download
 </button>
+
 
 const downloadReport = async () => {
     if (!analysis) return;
@@ -380,30 +615,36 @@ className="rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-3 fon
           </div>
           </div>
         )}
+<p className="text-white">Length: {rewrittenResume.length}</p>
 
-        {rewrittenResume && (
-  <div className="mt-8 rounded-3xl border border-purple-500/20 bg-white/5 p-6 shadow-2xl backdrop-blur-md">
-    <h2 className="mb-4 text-2xl font-bold">
-      ✨ AI Rewritten Resume
-    </h2>
+        <div className="mt-8 rounded-3xl border border-purple-500/20 bg-white/5 p-6 shadow-2xl backdrop-blur-md">
+  <h2 className="mb-4 text-2xl font-bold text-white">
+    ✨ AI Rewritten Resume
+  </h2>
 
-    <button
-  onClick={() => {
-    navigator.clipboard.writeText(rewrittenResume);
-    toast.success("Copied to clipboard!");
-  }}
-  className="mb-4 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
->
-  📋 Copy
-</button>
+  <button
+    onClick={() => {
+      navigator.clipboard.writeText(rewrittenResume);
+      toast.success("Copied to clipboard!");
+    }}
+    className="mb-4 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+  >
+    📋 Copy
+  </button>
 
-   <div className="max-h-[500px] overflow-y-auto rounded-2xl border border-white/10 bg-slate-900/60 p-5">
-  <pre className="whitespace-pre-wrap font-sans text-sm leading-7 text-slate-200">
-    {rewrittenResume}
-  </pre>
+  <button
+    onClick={downloadRewrittenResume}
+    className="mb-4 ml-3 rounded-lg bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
+  >
+    📥 Download
+  </button>
+
+  <textarea
+    value={rewrittenResume}
+    readOnly
+    className="h-[500px] w-full rounded-xl border border-slate-700 bg-slate-900 p-4 font-mono text-sm text-white outline-none"
+  />
 </div>
-  </div>
-)}
       </div>
     </div>
   );
