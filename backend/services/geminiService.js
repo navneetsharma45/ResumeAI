@@ -102,13 +102,17 @@ Jan 2024 – Present
 Normal experience description here.
 
 Resume:
-${resumeText}
+${cleanedResumeText}
 
 Job Description:
 ${jobDescription || "Not provided"}
 
 Return ONLY the plain-text rewritten resume.
 `;
+
+const cleanedResumeText = resumeText
+  .replace(/([A-Za-z])\s+(?=[A-Za-z]\b)/g, "$1");
+
 
   const response = await groq.chat.completions.create({
     model: "openai/gpt-oss-120b",
