@@ -73,6 +73,10 @@ Rules:
   Projects
   Education
   Certifications
+- NEVER insert spaces between individual letters.
+- NEVER output text like "R e a c t" or "T y p e S c r i p t".
+- Every normal English word must be written normally, for example "React", "TypeScript", "developer".
+- Return plain text only.
 
 Example format:
 
@@ -102,17 +106,14 @@ Jan 2024 – Present
 Normal experience description here.
 
 Resume:
-${cleanedResumeText}
+${resumeText}
 
 Job Description:
 ${jobDescription || "Not provided"}
 
-Return ONLY the plain-text rewritten resume.
-`;
+Before returning, check the entire resume for accidental character-by-character spacing and remove it.
 
-const cleanedResumeText = resumeText
-  .replace(/([A-Za-z])\s+(?=[A-Za-z]\b)/g, "$1");
-
+Return ONLY the corrected plain-text rewritten resume.`;
 
   const response = await groq.chat.completions.create({
     model: "openai/gpt-oss-120b",
